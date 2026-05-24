@@ -1,13 +1,18 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { supabase } from "@/utils/supabase"
 
 type Position = { x: number; y: number };
 type Direction = "UP" | "DOWN" | "LEFT" | "RIGHT";
+type GameBoardProps = {
+  userId?: string;
+  onBackToMenu: () => void;
+};
 
 const GRID_SIZE = 20; // Lưới 20x20
 
-export default function GameBoard() {
+export default function GameBoard({ userId, onBackToMenu }: GameBoardProps) {
   const [snake, setSnake] = useState<Position[]>([{ x: 10, y: 10 }]);
   const [food, setFood] = useState<Position>({ x: 5, y: 5 });
   const [direction, setDirection] = useState<Direction>("RIGHT");
@@ -118,6 +123,19 @@ export default function GameBoard() {
     return () => clearInterval(gameLoop);
   }, [food, isGameOver, generateFood]);
 
+  useEffect(() => {
+    const saveScore = async () => {
+      if (isGameOver && userId && score > 0) {
+        const { error } = await supabase
+          .from("scores")
+          .insert([{ user_id: userId, score: score }]);
+
+        if (error) console.error("Lỗi lưu điểm lên Cloud:", error.message);
+      }
+    };
+    saveScore();
+  }, [isGameOver, userId, score]);
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white p-4">
       <div className="mb-4 text-2xl font-bold font-mono">SCORE: {score}</div>
@@ -142,15 +160,14 @@ export default function GameBoard() {
           return (
             <div
               key={index}
-              className={`w-full h-full border-[0.5px] border-gray-800/10 ${
-                isSnakeHead
+              className={`w-full h-full border-[0.5px] border-gray-800/10 ${isSnakeHead
                   ? "bg-emerald-400 rounded-sm"
                   : isSnake
-                  ? "bg-emerald-600"
-                  : isFood
-                  ? "bg-red-500 animate-pulse rounded-full"
-                  : "bg-transparent"
-              }`}
+                    ? "bg-emerald-600"
+                    : isFood
+                      ? "bg-red-500 animate-pulse rounded-full"
+                      : "bg-transparent"
+                }`}
             />
           );
         })}
@@ -161,12 +178,14 @@ export default function GameBoard() {
               GAME OVER
             </h2>
             <p className="text-gray-300 mb-6">Bạn đạt được {score} điểm.</p>
-            <button
-              onClick={resetGame}
-              className="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded transition transform hover:scale-105"
-            >
-              Chơi Ván Mới
-            </button>
+            <div className="flex gap-4">
+              <button onClick={resetGame} className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 font-bold rounded text-sm">
+                Chơi Lại
+              </button>
+              <button onClick={onBackToMenu} className="px-4 py-2 bg-gray-600 hover:bg-gray-700 font-bold rounded text-sm">
+                Menu Chính
+              </button>
+            </div>
           </div>
         )}
       </div>
