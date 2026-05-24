@@ -1,0 +1,36 @@
+name: Continuous Integration (CI)
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    # Sửa Bước 2: Cấu hình cache cho đúng đường dẫn thư mục con
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 18
+        cache: 'npm'
+        cache-dependency-path: ./snake-game/package-lock.json
+
+    # Sửa Bước 3: Chỉ định chạy lệnh cài đặt bên trong thư mục snake-game
+    - name: Install dependencies
+      run: npm install
+      working-directory: ./snake-game
+
+    # Sửa Bước 4: Chỉ định chạy lệnh build bên trong thư mục snake-game
+    - name: Next.js Build Test
+      run: npm run build
+      working-directory: ./snake-game
+      env:
+        NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
