@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { supabase } from "@/utils/supabase"
+import { supabase } from "@/utils/supabase";
 
 type Position = { x: number; y: number };
 type Direction = "UP" | "DOWN" | "LEFT" | "RIGHT";
@@ -44,35 +44,48 @@ export default function GameBoard({ userId, onBackToMenu }: GameBoardProps) {
     setIsGameOver(false);
   };
 
+  // Hàm trung gian đổi hướng dùng chung cho cả phím cứng lẫn phím ảo trên màn hình
+  const changeDirection = useCallback((newDir: Direction) => {
+    const opposites = {
+      UP: "DOWN",
+      DOWN: "UP",
+      LEFT: "RIGHT",
+      RIGHT: "LEFT",
+    };
+    if (opposites[newDir] !== directionRef.current) {
+      setDirection(newDir);
+    }
+  }, []);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       switch (e.key) {
         case "ArrowUp":
         case "w":
         case "W":
-          if (directionRef.current !== "DOWN") setDirection("UP");
+          changeDirection("UP");
           break;
         case "ArrowDown":
         case "s":
         case "S":
-          if (directionRef.current !== "UP") setDirection("DOWN");
+          changeDirection("DOWN");
           break;
         case "ArrowLeft":
         case "a":
         case "A":
-          if (directionRef.current !== "RIGHT") setDirection("LEFT");
+          changeDirection("LEFT");
           break;
         case "ArrowRight":
         case "d":
         case "D":
-          if (directionRef.current !== "LEFT") setDirection("RIGHT");
+          changeDirection("RIGHT");
           break;
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [changeDirection]);
 
   useEffect(() => {
     if (isGameOver) return;
@@ -137,16 +150,28 @@ export default function GameBoard({ userId, onBackToMenu }: GameBoardProps) {
   }, [isGameOver, userId, score]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white p-4">
-      <div className="mb-4 text-2xl font-bold font-mono">SCORE: {score}</div>
+    <div className="flex flex-col items-center justify-center max-w-sm w-full p-4 animate-fade-in font-mono">
+      
+      {/* THANH ĐIỂM SỐ & NÚT QUAY LẠI MENU */}
+      <div className="w-full flex justify-between items-center bg-white/80 px-4 py-3 rounded-2xl border-2 border-slate-800 shadow-xs mb-4">
+        <span className="text-slate-800 font-bold tracking-wider text-sm">
+          SCORE: <span className="text-lime-700 font-black text-base">{score}</span>
+        </span>
+        <button 
+          onClick={onBackToMenu}
+          className="text-xs font-bold bg-slate-800 text-white px-3 py-1.5 rounded-xl hover:bg-slate-700 transition active:scale-95"
+        >
+          MENU
+        </button>
+      </div>
 
-      {/* Khung lưới chơi game */}
+      {/* KHUNG LƯỚI CHƠI GAME (GIỮ NGUYÊN KÍCH THƯỚC VÀ HIỂN THỊ CỦA BẠN) */}
       <div
-        className="grid bg-gray-800 border-4 border-gray-700 relative"
+        className="grid bg-gray-800 border-4 border-slate-800 relative rounded-2xl overflow-hidden shadow-md"
         style={{
           gridTemplateColumns: `repeat(${GRID_SIZE}, minmax(0, 1fr))`,
-          width: "400px",
-          height: "400px",
+          width: "100%",
+          aspectRatio: "1 / 1"
         }}
       >
         {Array.from({ length: GRID_SIZE * GRID_SIZE }).map((_, index) => {
@@ -160,36 +185,88 @@ export default function GameBoard({ userId, onBackToMenu }: GameBoardProps) {
           return (
             <div
               key={index}
-              className={`w-full h-full border-[0.5px] border-gray-800/10 ${isSnakeHead
-                  ? "bg-emerald-400 rounded-sm"
+              className={`w-full h-full border-[0.5px] border-gray-900/10 ${
+                isSnakeHead
+                  ? "bg-emerald-400 rounded-xs"
                   : isSnake
                     ? "bg-emerald-600"
                     : isFood
                       ? "bg-red-500 animate-pulse rounded-full"
                       : "bg-transparent"
-                }`}
+              }`}
             />
           );
         })}
 
+        {/* BẢNG THÔNG BÁO THUA cuộc */}
         {isGameOver && (
-          <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center text-center p-4">
-            <h2 className="text-3xl font-extrabold text-red-500 mb-2 font-mono animate-bounce">
+          <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center text-center p-4 z-10 animate-fade-in">
+            <h2 className="text-2xl font-black text-red-500 mb-2 tracking-widest">
               GAME OVER
             </h2>
-            <p className="text-gray-300 mb-6">Bạn đạt được {score} điểm.</p>
-            <div className="flex gap-4">
-              <button onClick={resetGame} className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 font-bold rounded text-sm">
+            <p className="text-gray-300 text-sm mb-6 font-bold">Bạn đạt được {score} điểm.</p>
+            <div className="flex gap-3">
+              <button onClick={resetGame} className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 font-bold rounded-xl text-xs transition active:scale-95 text-white">
                 Chơi Lại
               </button>
-              <button onClick={onBackToMenu} className="px-4 py-2 bg-gray-600 hover:bg-gray-700 font-bold rounded text-sm">
+              <button onClick={onBackToMenu} className="px-4 py-2 bg-gray-600 hover:bg-gray-700 font-bold rounded-xl text-xs transition active:scale-95 text-white">
                 Menu Chính
               </button>
             </div>
           </div>
         )}
       </div>
-      <p className="mt-4 text-xs text-gray-500 font-mono">Dùng các phím mũi tên hoặc WASD để di chuyển</p>
+
+      {/* 🎮 CỤM PHÍM MŨI TÊN ẢO D-PAD TRÊN MÀN HÌNH */}
+      <div className="flex flex-col items-center gap-1.5 mt-6 w-full max-w-[180px]">
+        {/* Phím Lên */}
+        <button 
+          type="button"
+          onClick={() => changeDirection("UP")}
+          className={`w-12 h-12 bg-white text-slate-800 rounded-xl border-2 border-slate-800 flex items-center justify-center shadow-sm transition active:scale-90 ${direction === "UP" ? "bg-amber-100" : ""}`}
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
+          </svg>
+        </button>
+
+        {/* Hàng ngang gồm Trái - Xuống - Phải */}
+        <div className="flex gap-1.5 w-full justify-between">
+          {/* Phím Trái */}
+          <button 
+            type="button"
+            onClick={() => changeDirection("LEFT")}
+            className={`w-12 h-12 bg-white text-slate-800 rounded-xl border-2 border-slate-800 flex items-center justify-center shadow-sm transition active:scale-90 ${direction === "LEFT" ? "bg-amber-100" : ""}`}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+            </svg>
+          </button>
+
+          {/* Phím Xuống */}
+          <button 
+            type="button"
+            onClick={() => changeDirection("DOWN")}
+            className={`w-12 h-12 bg-white text-slate-800 rounded-xl border-2 border-slate-800 flex items-center justify-center shadow-sm transition active:scale-90 ${direction === "DOWN" ? "bg-amber-100" : ""}`}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+            </svg>
+          </button>
+
+          {/* Phím Phải */}
+          <button 
+            type="button"
+            onClick={() => changeDirection("RIGHT")}
+            className={`w-12 h-12 bg-white text-slate-800 rounded-xl border-2 border-slate-800 flex items-center justify-center shadow-sm transition active:scale-90 ${direction === "RIGHT" ? "bg-amber-100" : ""}`}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+            </svg>
+          </button>
+        </div>
+      </div>
+      
     </div>
   );
 }
