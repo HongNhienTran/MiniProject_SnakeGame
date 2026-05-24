@@ -111,9 +111,9 @@ export default function GameBoard({ userId, onBackToMenu }: GameBoardProps) {
 
         if (newHead.x === food.x && newHead.y === food.y) {
           setScore((prev) => prev + 1);
-          setFood(generateFood(newSnake)); // Tạo mồi mới
+          setFood(generateFood(newSnake)); 
         } else {
-          newSnake.pop(); // Nếu không ăn mồi thì xóa đốt cuối cùng để giữ nguyên độ dài
+          newSnake.pop();
         }
 
         return newSnake;
