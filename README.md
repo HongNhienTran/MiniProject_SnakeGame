@@ -1,3 +1,4 @@
 # MiniProject_SnakeGame
+Simple Snake web game using Next.js and Supabase
 
-A retro-modern Snake web game built with Next.js, TailwindCSS, and Supabase.
+Link Deploy: https://mini-project01-snake-game.vercel.app/
