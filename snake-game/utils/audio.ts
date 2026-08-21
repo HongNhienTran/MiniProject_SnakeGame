@@ -4,6 +4,8 @@ class SoundManager {
   private ctx: AudioContext | null = null;
   private bgmInterval: any = null;
   private isBgmPlaying: boolean = false;
+  private bgmGainNode: GainNode | null = null;
+  private currentVolume: number = 0.5;
 
   private getContext(): AudioContext | null {
     if (typeof window === "undefined") return null;
@@ -19,7 +21,17 @@ class SoundManager {
     return this.ctx;
   }
 
-  // Âm thanh click nút UI
+  private getBgmGain(): GainNode | null {
+    const ctx = this.getContext();
+    if (!ctx) return null;
+    if (!this.bgmGainNode) {
+      this.bgmGainNode = ctx.createGain();
+      this.bgmGainNode.connect(ctx.destination);
+    }
+    return this.bgmGainNode;
+  }
+
+  // UI button click sound effect
   playClick(volume: number = 0.5) {
     if (volume <= 0) return;
     const ctx = this.getContext();
@@ -44,7 +56,7 @@ class SoundManager {
     }
   }
 
-  // Âm thanh khi Rắn ăn mồi (Classic Arcade Coin / Powerup Arpeggio)
+  // Eating food sound effect (Classic Arcade Coin / Powerup Arpeggio)
   playEat(volume: number = 0.5) {
     if (volume <= 0) return;
     const ctx = this.getContext();
@@ -76,7 +88,7 @@ class SoundManager {
     }
   }
 
-  // Âm thanh chuyển hướng (Move / Tick nhẹ nhàng)
+  // Turn / direction change sound effect
   playMove(volume: number = 0.5) {
     if (volume <= 0) return;
     const ctx = this.getContext();
@@ -101,7 +113,7 @@ class SoundManager {
     }
   }
 
-  // Âm thanh khi Game Over (Buzzer giảm dần)
+  // Game over sound effect (Descending buzzer)
   playGameOver(volume: number = 0.5) {
     if (volume <= 0) return;
     const ctx = this.getContext();
@@ -138,70 +150,54 @@ class SoundManager {
     }
   }
 
-  // Âm thanh chiến thắng / điểm cao
-  playHighScore(volume: number = 0.5) {
-    if (volume <= 0) return;
-    const ctx = this.getContext();
-    if (!ctx) return;
-
-    try {
-      const melody = [
-        { f: 523.25, d: 0.1 },
-        { f: 659.25, d: 0.1 },
-        { f: 783.99, d: 0.1 },
-        { f: 1046.5, d: 0.25 },
-      ];
-      let offset = 0;
-      melody.forEach((note) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        const start = ctx.currentTime + offset;
-        const end = start + note.d;
-
-        osc.type = "triangle";
-        osc.frequency.setValueAtTime(note.f, start);
-
-        gain.gain.setValueAtTime(volume * 0.35, start);
-        gain.gain.exponentialRampToValueAtTime(0.001, end);
-
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(start);
-        osc.stop(end);
-        offset += note.d * 0.9;
-      });
-    } catch (e) {
-      console.warn("Audio error:", e);
+  // Update BGM Volume in real-time
+  setBGMVolume(volume: number) {
+    this.currentVolume = Math.max(0, Math.min(1, volume));
+    if (this.ctx && this.bgmGainNode) {
+      try {
+        const targetGain = this.isBgmPlaying ? this.currentVolume * 0.15 : 0;
+        this.bgmGainNode.gain.cancelScheduledValues(this.ctx.currentTime);
+        this.bgmGainNode.gain.setValueAtTime(targetGain, this.ctx.currentTime);
+      } catch (e) {}
     }
   }
 
-  // Nhạc nền Retro 8-bit BGM (Chiptune loop)
-  startBGM(volume: number = 0.3) {
-    if (this.isBgmPlaying || volume <= 0) return;
+  // Background music (Instant, responsive Chiptune loop)
+  startBGM(volume: number = 0.5) {
+    this.currentVolume = Math.max(0, Math.min(1, volume));
+
+    // Clear any previous interval immediately
+    this.stopBGM();
+
     const ctx = this.getContext();
-    if (!ctx) return;
+    const bgmGain = this.getBgmGain();
+    if (!ctx || !bgmGain) return;
 
     this.isBgmPlaying = true;
+    bgmGain.gain.cancelScheduledValues(ctx.currentTime);
+    bgmGain.gain.setValueAtTime(this.currentVolume * 0.15, ctx.currentTime);
+
     const baseNotes = [261.63, 329.63, 392.00, 329.63, 293.66, 349.23, 440.00, 349.23];
     let noteIndex = 0;
 
     const playNextBeat = () => {
-      if (!this.isBgmPlaying) return;
+      if (!this.isBgmPlaying || !this.ctx || !this.bgmGainNode) return;
       try {
         const freq = baseNotes[noteIndex % baseNotes.length];
         noteIndex++;
 
         const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
+        const noteGain = ctx.createGain();
         osc.type = "sine";
         osc.frequency.setValueAtTime(freq, ctx.currentTime);
 
-        gain.gain.setValueAtTime(volume * 0.12, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.22);
+        noteGain.gain.setValueAtTime(1.0, ctx.currentTime);
+        noteGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.22);
 
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start();
+        osc.connect(noteGain);
+        noteGain.connect(bgmGain);
+
+        osc.start(ctx.currentTime);
         osc.stop(ctx.currentTime + 0.22);
       } catch (e) {}
     };
@@ -210,15 +206,24 @@ class SoundManager {
     this.bgmInterval = setInterval(playNextBeat, 260);
   }
 
+  // Instantly cut and silence BGM
   stopBGM() {
     this.isBgmPlaying = false;
+
     if (this.bgmInterval) {
       clearInterval(this.bgmInterval);
       this.bgmInterval = null;
     }
+
+    if (this.ctx && this.bgmGainNode) {
+      try {
+        this.bgmGainNode.gain.cancelScheduledValues(this.ctx.currentTime);
+        this.bgmGainNode.gain.setValueAtTime(0, this.ctx.currentTime);
+      } catch (e) {}
+    }
   }
 
-  getBgmStatus() {
+  getBgmStatus(): boolean {
     return this.isBgmPlaying;
   }
 }

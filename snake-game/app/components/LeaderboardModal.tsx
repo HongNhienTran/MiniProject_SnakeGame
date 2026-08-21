@@ -58,7 +58,7 @@ export default function LeaderboardModal({
       >
         {/* Header */}
         <div className={`flex justify-between items-center mb-4 border-b-2 ${theme.borderColor} pb-2`}>
-          <h3 className="text-base font-black tracking-widest uppercase">🏆 TOP 10 GLOBAL</h3>
+          <h3 className="text-base font-black tracking-widest uppercase">LEADERBOARD</h3>
           <button 
             type="button"
             onClick={() => {
@@ -74,19 +74,19 @@ export default function LeaderboardModal({
         {/* Danh sách bảng xếp hạng */}
         <div className="flex flex-col gap-2 max-h-[280px] overflow-y-auto pr-1">
           {leaderboard.length === 0 ? (
-            <p className={`text-center text-sm py-4 ${theme.textMuted}`}>No records yet!</p>
+            <p className={`text-center text-sm py-4 ${theme.textMuted}`}>No records yet</p>
           ) : (
             leaderboard.map((item, index) => (
               <div 
                 key={index} 
                 className={`flex justify-between items-center px-4 py-2.5 rounded-xl border font-bold text-sm transition-all ${
                   index === 0 
-                    ? "bg-amber-100 border-2 border-amber-500 text-amber-900 shadow-xs" 
-                    : "bg-white/90 text-slate-800 border-slate-300"
+                    ? "bg-amber-100/90 border-2 border-amber-500/80 text-amber-900 shadow-xs" 
+                    : "bg-white/90 text-slate-800 border-slate-300/80"
                 }`}
               >
                 <div className="flex items-center gap-2">
-                  <span className={`text-xs ${index === 0 ? "text-amber-600 font-black" : "text-slate-400"}`}>
+                  <span className={`text-xs font-mono font-black ${index === 0 ? "text-amber-700" : "text-slate-400"}`}>
                     #{index + 1}
                   </span>
                   <span className="truncate max-w-[140px]">
