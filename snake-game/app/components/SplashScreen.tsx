@@ -33,14 +33,8 @@ export default function SplashScreen({ onFinished }: SplashScreenProps) {
             className="fixed inset-0 z-50 flex flex-col items-center justify-center select-none animate-fade-in"
             style={{ backgroundColor: "#f6edcc" }}
         >
-            <style>{`
-            @keyframes jump-low {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-15px); } 
-            }
-            `}</style>
             {/* Logo Area */}
-            <div className="mb-8" style={{ animation: 'jump-low 1s ease-in-out infinite' }}>
+            <div className="mb-8 animate-jump-low">
                 <Image
                     src="https://res.cloudinary.com/det724qml/image/upload/v1779598010/SnakeGame_logo_tbbt6c.png"
                     alt="Snake Game Logo"
