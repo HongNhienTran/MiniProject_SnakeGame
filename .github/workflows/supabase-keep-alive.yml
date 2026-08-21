@@ -1,0 +1,43 @@
+name: Supabase Keep Alive
+
+on:
+  schedule:
+    # Chạy tự động lúc 00:00 UTC mỗi 2 ngày (ngăn Supabase pause sau 7 ngày không hoạt động)
+    - cron: '0 0 */2 * *'
+  workflow_dispatch: # Cho phép bấm nút "Run workflow" thủ công trên GitHub Actions
+
+jobs:
+  ping-supabase:
+    name: Ping Supabase Database
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase REST API
+        env:
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
+            echo "Error: Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY in GitHub Secrets."
+            exit 1
+          fi
+
+          # Xóa dấu gạch chéo cuối URL nếu có
+          CLEAN_URL="${SUPABASE_URL%/}"
+
+          echo "Pinging Supabase REST API at $CLEAN_URL..."
+          HTTP_STATUS=$(curl -s -o response.json -w "%{http_code}" \
+            -X GET "$CLEAN_URL/rest/v1/scores?select=id&limit=1" \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY")
+
+          echo "HTTP Status Code: $HTTP_STATUS"
+          echo "Response:"
+          cat response.json
+          echo ""
+
+          if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
+            echo "✅ Successfully pinged Supabase! Project status is active."
+          else
+            echo "❌ Failed to ping Supabase (HTTP $HTTP_STATUS)."
+            exit 1
+          fi
