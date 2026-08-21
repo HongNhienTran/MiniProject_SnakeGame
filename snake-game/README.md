@@ -29,15 +29,28 @@
 
 ---
 
+## 🛠️ Tech Stack
+
+| Category | Technologies |
+|---|---|
+| **Frontend Framework** | [Next.js 16 (App Router)](https://nextjs.org/), [React 19](https://react.dev/) |
+| **Language & Styling** | [TypeScript](https://www.typescriptlang.org/), [TailwindCSS v4](https://tailwindcss.com/) |
+| **Backend & Auth** | [Supabase Database & Authentication](https://supabase.com/) |
+| **Audio Engine** | Native Web Audio API (Chiptune Synthesizer) |
+| **CI/CD & Hosting** | [Vercel](https://vercel.com/), [GitHub Actions](https://github.com/features/actions) |
+
+---
+
 ## 🚀 Getting Started
 
 1. **Install dependencies**:
    ```bash
+   cd snake-game
    npm install
    ```
 
 2. **Configure Environment Variables**:
-   Create a `.env.local` file:
+   Create a `.env.local` file inside the `snake-game/` directory:
    ```env
    NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
@@ -48,6 +61,18 @@
    npm run dev
    ```
    Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+---
+
+## 🛡️ Supabase Keep-Alive Mechanism
+
+Supabase Free Tier pauses inactive databases after 7 days without requests. This project includes two automated keep-alive methods:
+
+1. **GitHub Actions Workflow** (`.github/workflows/supabase-keep-alive.yml`):
+   - Automatically pings the Supabase REST API every 2 days (`0 0 */2 * *`).
+   - Requires repository secrets `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` configured under **Settings ➡️ Secrets and variables ➡️ Actions**.
+2. **Next.js Keep-Alive Route** (`/api/keep-alive`):
+   - Configured in `vercel.json` for Vercel Cron deployments, or can be triggered via free webhook services (e.g. cron-job.org).
 
 ---
 

@@ -177,10 +177,19 @@ export default function GameBoard({
     saveScore();
   }, [isGameOver, userId, score]);
 
+  const snakeHead = snake[0];
+  const snakeBodySet = React.useMemo(() => {
+    const set = new Set<string>();
+    for (let i = 1; i < snake.length; i++) {
+      set.add(`${snake[i].x},${snake[i].y}`);
+    }
+    return set;
+  }, [snake]);
+
   return (
     <div className="flex flex-col items-center justify-center max-w-sm w-full p-4 animate-fade-in font-mono">
       
-      {/* THANH ĐIỂM SỐ & NÚT QUAY LẠI MENU */}
+      {/* SCORE BAR & MENU BUTTON */}
       <div className={`w-full flex justify-between items-center px-4 py-3 rounded-2xl border-2 shadow-xs mb-4 ${theme.cardBg} ${theme.borderColor}`}>
         <span className={`font-bold tracking-wider text-sm ${theme.textColor}`}>
           SCORE: <span className={`font-black text-base ${theme.accentText}`}>{score}</span>
@@ -196,7 +205,7 @@ export default function GameBoard({
         </button>
       </div>
 
-      {/* KHUNG LƯỚI CHƠI GAME */}
+      {/* GAME GRID */}
       <div
         className={`grid border-4 relative rounded-2xl overflow-hidden shadow-md transition-all ${theme.boardBg} ${theme.boardBorder}`}
         style={{
@@ -209,26 +218,26 @@ export default function GameBoard({
           const x = index % GRID_SIZE;
           const y = Math.floor(index / GRID_SIZE);
 
-          const isSnake = snake.some((seg) => seg.x === x && seg.y === y);
-          const isSnakeHead = snake[0].x === x && snake[0].y === y;
+          const isHead = snakeHead && snakeHead.x === x && snakeHead.y === y;
+          const isBody = !isHead && snakeBodySet.has(`${x},${y}`);
           const isFood = food.x === x && food.y === y;
 
           return (
             <div
               key={index}
               className={`w-full h-full border-[0.5px] relative flex items-center justify-center transition-all duration-75 ${theme.gridLine} ${
-                isSnakeHead
+                isHead
                   ? avatarUrl
                     ? "rounded-md overflow-hidden z-10 scale-110 shadow-sm border border-white/40"
                     : `${theme.snakeHead} rounded-sm z-10 shadow-xs`
-                  : isSnake
+                  : isBody
                     ? `${theme.snakeBody} rounded-xs`
                     : isFood
                       ? `${theme.food} animate-pulse rounded-full`
                       : "bg-transparent"
               }`}
             >
-              {isSnakeHead && avatarUrl ? (
+              {isHead && avatarUrl ? (
                 <img
                   src={avatarUrl}
                   alt="Snake Head"
