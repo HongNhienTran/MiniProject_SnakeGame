@@ -94,6 +94,7 @@ export default function Home() {
 
   const handleVolumeChange = (newVol: number) => {
     setVolume(newVol);
+    soundManager.setBGMVolume(newVol);
     try {
       localStorage.setItem("snake_volume", String(newVol));
     } catch (e) {}
@@ -101,6 +102,11 @@ export default function Home() {
 
   const handleBgmToggle = (enabled: boolean) => {
     setBgmEnabled(enabled);
+    if (enabled) {
+      soundManager.startBGM(volume);
+    } else {
+      soundManager.stopBGM();
+    }
     try {
       localStorage.setItem("snake_bgm_enabled", String(enabled));
     } catch (e) {}
@@ -120,7 +126,7 @@ export default function Home() {
       .limit(10);
 
     if (error) {
-      console.error("Lỗi lấy BXH:", error.message);
+      console.error("Error fetching leaderboard:", error.message);
     } else if (data) {
       setLeaderboard(data as unknown as LeaderboardItem[]);
     }
@@ -195,7 +201,7 @@ export default function Home() {
     if (soundEnabled) soundManager.playClick(volume);
 
     if (usernameInput.trim().length < 3) {
-      alert("Biệt danh phải có ít nhất 3 ký tự!");
+      alert("Nickname must be at least 3 characters!");
       return;
     }
 
@@ -213,9 +219,9 @@ export default function Home() {
 
     if (error) {
       if (error.code === "23505") {
-        alert("Biệt danh này đã có người sử dụng, vui lòng chọn tên khác!");
+        alert("This nickname is already taken, please choose another one!");
       } else {
-        alert("Lỗi: " + error.message);
+        alert("Error: " + error.message);
       }
     } else {
       setProfile(data);
@@ -237,7 +243,8 @@ export default function Home() {
         style={{ backgroundColor: activeTheme.bgHex }}
       >
         <GameBoard 
-          userId={profile?.id} 
+          userId={profile?.id}
+          avatarUrl={user && profile ? (profile.avatar_url || DEFAULT_AVATARS[0]) : undefined}
           onBackToMenu={() => { 
             setIsPlaying(false); 
             fetchLeaderboard(); 
@@ -249,7 +256,7 @@ export default function Home() {
         />
         <button 
           onClick={handleLogout}
-          className="absolute top-4 right-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-sm rounded-xl font-mono text-white shadow-md transition active:scale-95 border-2 border-red-700"
+          className="absolute top-4 right-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-xs uppercase font-bold rounded-xl font-mono text-white shadow-sm transition active:scale-95 border border-red-800"
         >
           Logout
         </button>
@@ -268,8 +275,8 @@ export default function Home() {
         className="w-full max-w-[800px] h-full min-h-[85vh] md:min-h-[600px] relative flex flex-col items-center justify-between p-6 rounded-3xl bg-transparent border-2 border-transparent transition-all"
       >
 
-        {/* 👑 KHU VỰC TRÊN GÓC TRÁI: THANH THỂ HIỆN AVATAR & BEST SCORE */}
-        <div className={`absolute top-0 left-0 z-20 flex items-center gap-3 p-2 pr-4 rounded-full border-2 shadow-sm min-w-[180px] backdrop-blur-xs ${activeTheme.cardBg} ${activeTheme.borderColor}`}>
+        {/* 👑 KHU VỰC TRÊN GÓC TRÁI: PROFILE & BEST SCORE */}
+        <div className={`absolute top-0 left-0 z-20 flex items-center gap-3 p-2 pr-4 rounded-full border-2 shadow-xs min-w-[180px] backdrop-blur-xs ${activeTheme.cardBg} ${activeTheme.borderColor}`}>
           {user && profile ? (
             <>
               <div className={`w-10 h-10 rounded-full border overflow-hidden relative bg-slate-200 flex-shrink-0 ${activeTheme.borderColor}`}>
@@ -277,7 +284,7 @@ export default function Home() {
               </div>
               <div className="flex flex-col leading-tight min-w-[70px]">
                 <span className={`text-xs font-black truncate max-w-[90px] ${activeTheme.textColor}`}>{profile.username}</span>
-                <span className="text-[10px] text-amber-600 font-bold tracking-wider">🏆 BEST: {bestScore}</span>
+                <span className="text-[10px] text-amber-600 font-bold tracking-wider">BEST: {bestScore}</span>
               </div>
               <button 
                 type="button"
@@ -287,8 +294,8 @@ export default function Home() {
                   setSelectedAvatar(profile.avatar_url || DEFAULT_AVATARS[0]);
                   setShowEditModal(true);
                 }}
-                className="p-1 hover:bg-black/10 rounded-full transition opacity-70 hover:opacity-100 border border-transparent hover:border-black/20 ml-1"
-                title="Chỉnh sửa thông tin"
+                className="p-1.5 hover:bg-black/10 rounded-full transition opacity-70 hover:opacity-100 border border-transparent hover:border-black/20 ml-1"
+                title="Edit profile"
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
@@ -325,19 +332,19 @@ export default function Home() {
             <>
               <button 
                 onClick={handleGoogleLogin} 
-                className="w-full py-3.5 px-6 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-full border-2 border-slate-900 transition transform hover:scale-102 active:scale-98 flex items-center justify-center gap-3 shadow-md"
+                className="w-full py-3.5 px-6 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-full border-2 border-slate-900 transition transform hover:scale-102 active:scale-98 flex items-center justify-center gap-3 shadow-sm text-sm"
               >
-                <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
                   <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
                 </svg>
-                LOGIN WITH GG
+                SIGN IN WITH GOOGLE
               </button>
               <button 
                 onClick={() => {
                   if (soundEnabled) soundManager.playClick(volume);
                   setIsPlaying(true);
                 }} 
-                className={`w-full py-3.5 font-bold rounded-full transition transform hover:scale-102 active:scale-98 shadow-sm ${activeTheme.secondaryBtn}`}
+                className={`w-full py-3.5 font-bold rounded-full transition transform hover:scale-102 active:scale-98 shadow-xs text-sm ${activeTheme.secondaryBtn}`}
               >
                 PLAY AS GUEST
               </button>
@@ -346,9 +353,9 @@ export default function Home() {
 
           {user && !profile && (
             <form onSubmit={handleSaveProfile} className={`w-full flex flex-col gap-4 p-6 rounded-2xl border-2 shadow-sm ${activeTheme.cardBg} ${activeTheme.borderColor}`}>
-              <p className="text-sm font-bold text-center">Setup your Retro Profile:</p>
+              <p className="text-sm font-bold text-center">Set up your profile:</p>
               <div className="flex flex-col items-center gap-2">
-                <span className="text-[11px] opacity-70 font-bold uppercase tracking-wider">Choose Avatar</span>
+                <span className="text-[11px] opacity-70 font-bold uppercase tracking-wider">Avatar</span>
                 <div className="flex gap-2 justify-center">
                   {DEFAULT_AVATARS.map((av, idx) => (
                     <button 
@@ -358,7 +365,7 @@ export default function Home() {
                         if (soundEnabled) soundManager.playClick(volume);
                         setSelectedAvatar(av);
                       }} 
-                      className={`w-10 h-10 rounded-full overflow-hidden relative transition border-2 ${selectedAvatar === av ? `scale-110 shadow-md ${activeTheme.borderColor}` : "border-transparent opacity-60 hover:opacity-100"}`}
+                      className={`w-10 h-10 rounded-full overflow-hidden relative transition border-2 ${selectedAvatar === av ? `scale-110 shadow-sm ${activeTheme.borderColor}` : "border-transparent opacity-60 hover:opacity-100"}`}
                     >
                       <img src={av} alt="Avatar option" className="w-full h-full object-cover" />
                     </button>
@@ -374,7 +381,7 @@ export default function Home() {
               />
               <button 
                 type="submit" 
-                className={`w-full py-2.5 font-bold rounded-xl shadow-sm transition ${activeTheme.primaryBtn}`}
+                className={`w-full py-2.5 font-bold rounded-xl shadow-xs transition ${activeTheme.primaryBtn}`}
               >
                 CONFIRM PROFILE
               </button>
@@ -388,9 +395,9 @@ export default function Home() {
                   if (soundEnabled) soundManager.playClick(volume);
                   setIsPlaying(true);
                 }} 
-                className={`w-full py-4 font-black text-xl rounded-full shadow-md transition transform hover:scale-105 active:scale-95 ${activeTheme.primaryBtn}`}
+                className={`w-full py-4 font-black text-lg tracking-wider rounded-full shadow-md transition transform hover:scale-105 active:scale-95 ${activeTheme.primaryBtn}`}
               >
-                START GAME 🚀
+                START GAME
               </button>
               <button 
                 onClick={handleLogout} 
@@ -403,34 +410,33 @@ export default function Home() {
         </div>
 
         {/* KHU VỰC DƯỚI GÓC PHẢI: HAI NÚT TRÒN (BXH & CÀI ĐẶT) */}
-        <div className="absolute bottom-0 right-0 flex gap-4 z-20">
+        <div className="absolute bottom-0 right-0 flex gap-3 z-20">
           {/* Nút Bảng Xếp Hạng */}
           <button 
             type="button"
-            className={`w-14 h-14 rounded-full border-2 flex items-center justify-center shadow-md transition transform hover:scale-110 active:scale-95 ${activeTheme.secondaryBtn}`}
+            className={`w-12 h-12 rounded-full border-2 flex items-center justify-center shadow-xs transition transform hover:scale-105 active:scale-95 ${activeTheme.secondaryBtn}`}
             onClick={() => {
               if (soundEnabled) soundManager.playClick(volume);
               setShowLeaderboard(true);
             }}
-            title="Bảng xếp hạng"
+            title="Leaderboard"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 14a3.5 3.5 0 003.5-3.5V5.5h-7v5A3.5 3.5 0 0012 14zM9 7H6.5a1.5 1.5 0 000 3H9M15 7h2.5a1.5 1.5 0 010 3H15M12 14v4m-3 0h6" />
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-3.375c0-.621-.504-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.003 0H9.497m5.003 0a7.5 7.5 0 00-.75-3.375M9.497 14.25a7.5 7.5 0 01.75-3.375M16.5 7.5a4.5 4.5 0 00-9 0v1.5a4.5 4.5 0 009 0V7.5z" />
             </svg>
           </button>
 
-          {/* Nút Cài Đặt (Settings Modal) */}
+          {/* Nút Cài Đặt */}
           <button 
             type="button" 
-            className={`w-14 h-14 rounded-full border-2 flex items-center justify-center shadow-md transition transform hover:scale-110 active:scale-95 ${activeTheme.secondaryBtn}`} 
+            className={`w-12 h-12 rounded-full border-2 flex items-center justify-center shadow-xs transition transform hover:scale-105 active:scale-95 ${activeTheme.secondaryBtn}`} 
             onClick={() => {
               if (soundEnabled) soundManager.playClick(volume);
               setShowSettingsModal(true);
             }}
-            title="Cài đặt Theme & Âm thanh"
+            title="Settings"
           >
-            <svg className="w-6 h-6 animate-[spin_10s_linear_infinite]" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.43l-1.003.767a1.123 1.123 0 00-.417 1.03c.004.074.006.148.006.222 0 .074-.002.148-.006.222a1.123 1.123 0 00.417 1.03l1.003.767a1.125 1.125 0 01.26 1.43l-1.296 2.247a1.125 1.125 0 01-1.37.49l-1.216-.456a1.125 1.125 0 00-1.076.124a2.08 2.08 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281a1.125 1.125 0 00-.645-.87a2.08 2.08 0 01-.22-.127a1.126 1.126 0 00-1.075-.124l-1.217.456a1.125 1.125 0 01-1.37-.49l-1.296-2.247a1.125 1.125 0 01.26-1.43l1.003-.767a1.122 1.122 0 00.417-1.03a2.07 2.07 0 01-.006-.222c0-.074.002-.148.006-.222a1.122 1.122 0 00-.417-1.03l-1.003-.767a1.125 1.125 0 01-.26-1.43l1.296-2.247a1.125 1.125 0 011.37-.49l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128c.332-.183.582-.495.644-.869l.214-1.28z" />
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
@@ -456,7 +462,7 @@ export default function Home() {
             style={{ backgroundColor: activeTheme.modalBgHex }}
           >
             <div className={`flex justify-between items-center border-b-2 ${activeTheme.borderColor} pb-2`}>
-              <h3 className="text-base font-black tracking-wider">✏️ EDIT PROFILE</h3>
+              <h3 className="text-base font-black tracking-wider uppercase">EDIT PROFILE</h3>
               <button 
                 type="button" 
                 onClick={() => {
@@ -479,7 +485,7 @@ export default function Home() {
                       if (soundEnabled) soundManager.playClick(volume);
                       setSelectedAvatar(av);
                     }} 
-                    className={`w-10 h-10 rounded-full overflow-hidden relative transition border-2 ${selectedAvatar === av ? `scale-110 shadow-md ${activeTheme.borderColor}` : "border-transparent opacity-50 hover:opacity-100"}`}
+                    className={`w-10 h-10 rounded-full overflow-hidden relative transition border-2 ${selectedAvatar === av ? `scale-110 shadow-xs ${activeTheme.borderColor}` : "border-transparent opacity-50 hover:opacity-100"}`}
                   >
                     <img src={av} alt="Avatar option" className="w-full h-full object-cover" />
                   </button>
@@ -497,7 +503,7 @@ export default function Home() {
             </div>
             <button 
               type="submit" 
-              className={`w-full py-2.5 font-bold rounded-xl shadow-sm transition text-sm ${activeTheme.primaryBtn}`}
+              className={`w-full py-2.5 font-bold rounded-xl shadow-xs transition text-sm ${activeTheme.primaryBtn}`}
             >
               SAVE CHANGES
             </button>

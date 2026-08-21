@@ -52,6 +52,7 @@ export default function SettingsModal({
   const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = parseFloat(e.target.value) / 100;
     onVolumeChange(val);
+    soundManager.setBGMVolume(val);
   };
 
   const percent = Math.round(volume * 100);
@@ -72,10 +73,7 @@ export default function SettingsModal({
       >
         {/* HEADER */}
         <div className={`flex justify-between items-center pb-3 border-b-2 ${activeTheme.borderColor} mb-5`}>
-          <div className="flex items-center gap-2">
-            <span className="text-xl">⚙️</span>
-            <h3 className="text-lg font-black tracking-widest uppercase">GAME SETTINGS</h3>
-          </div>
+          <h3 className="text-base font-black tracking-widest uppercase">SETTINGS</h3>
           <button
             type="button"
             onClick={() => {
@@ -91,8 +89,8 @@ export default function SettingsModal({
         {/* SECTION 1: THEME SELECTION */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-black uppercase tracking-wider flex items-center gap-1.5">
-              <span>🎨</span> COLOR THEME
+            <span className="text-xs font-black uppercase tracking-wider">
+              COLOR THEME
             </span>
             <span className="text-[11px] font-bold opacity-75">{activeTheme.name}</span>
           </div>
@@ -120,27 +118,24 @@ export default function SettingsModal({
                     color: item.id === "cyberpunk" ? "#e0f2fe" : item.id === "gameboy" ? "#0f380f" : "#1e293b",
                   }}
                 >
-                  <div className="flex items-center gap-2">
-                    <span className="text-base">{item.emoji}</span>
-                    <span className="text-xs font-black">{item.name}</span>
-                  </div>
+                  <span className="text-xs font-black">{item.name}</span>
 
                   {/* Swatches (Color dots) */}
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1.5">
                     <span
                       className="w-3.5 h-3.5 rounded-full border border-black/20"
                       style={{ backgroundColor: item.swatch.bg }}
-                      title="Nền"
+                      title="Background"
                     />
                     <span
                       className="w-3.5 h-3.5 rounded-full border border-black/20"
                       style={{ backgroundColor: item.swatch.snake }}
-                      title="Rắn"
+                      title="Snake"
                     />
                     <span
                       className="w-3.5 h-3.5 rounded-full border border-black/20"
                       style={{ backgroundColor: item.swatch.food }}
-                      title="Mồi"
+                      title="Food"
                     />
                   </div>
                 </button>
@@ -151,15 +146,15 @@ export default function SettingsModal({
 
         {/* SECTION 2: AUDIO CONTROLS */}
         <div className={`pt-4 border-t-2 ${activeTheme.borderColor} mb-6 flex flex-col gap-4`}>
-          <span className="text-xs font-black uppercase tracking-wider flex items-center gap-1.5">
-            <span>🔊</span> SOUND & AUDIO
+          <span className="text-xs font-black uppercase tracking-wider">
+            AUDIO
           </span>
 
           {/* Sound FX Toggle */}
           <div className="flex items-center justify-between bg-black/5 p-3 rounded-2xl border border-black/10">
             <div className="flex flex-col">
-              <span className="text-xs font-bold">Sound Effects (SFX)</span>
-              <span className="text-[10px] opacity-70">Âm thanh ăn mồi, rẽ hướng, game over</span>
+              <span className="text-xs font-bold">Sound Effects</span>
+              <span className="text-[10px] opacity-70">Eat, turn & game over sounds</span>
             </div>
             <button
               type="button"
@@ -183,9 +178,7 @@ export default function SettingsModal({
           {/* Volume Slider */}
           <div className="flex flex-col gap-2 bg-black/5 p-3.5 rounded-2xl border border-black/10">
             <div className="flex items-center justify-between text-xs font-bold">
-              <span className="flex items-center gap-1.5">
-                {percent === 0 ? "🔇" : percent < 50 ? "🔉" : "🔊"} Âm lượng (Volume)
-              </span>
+              <span>Volume</span>
               <span className="text-xs font-black bg-white/70 px-2 py-0.5 rounded-lg border border-black/10">
                 {percent}%
               </span>
@@ -212,7 +205,7 @@ export default function SettingsModal({
                 disabled={!soundEnabled}
                 className="text-[11px] font-bold px-3 py-1 bg-white/80 hover:bg-white text-slate-800 rounded-xl border border-slate-700 shadow-xs transition active:scale-95 disabled:opacity-40"
               >
-                🎵 Test SFX
+                Test Sound
               </button>
             </div>
           </div>
@@ -220,19 +213,13 @@ export default function SettingsModal({
           {/* BGM Chiptune Toggle */}
           <div className="flex items-center justify-between bg-black/5 p-3 rounded-2xl border border-black/10">
             <div className="flex flex-col">
-              <span className="text-xs font-bold">Retro Chiptune BGM</span>
-              <span className="text-[10px] opacity-70">Nhạc nền 8-bit hoài niệm</span>
+              <span className="text-xs font-bold">Background Music</span>
+              <span className="text-[10px] opacity-70">Retro background melody</span>
             </div>
             <button
               type="button"
               onClick={() => {
-                const nextState = !bgmEnabled;
-                onBgmToggle(nextState);
-                if (nextState) {
-                  soundManager.startBGM(volume);
-                } else {
-                  soundManager.stopBGM();
-                }
+                onBgmToggle(!bgmEnabled);
               }}
               className={`w-14 h-7 rounded-full transition-colors relative border-2 ${activeTheme.borderColor} ${
                 bgmEnabled ? "bg-emerald-500" : "bg-gray-400"
@@ -256,7 +243,7 @@ export default function SettingsModal({
           }}
           className={`w-full py-3 rounded-2xl font-black text-sm tracking-wider shadow-md transition active:scale-98 ${activeTheme.primaryBtn}`}
         >
-          DONE & SAVE
+          CLOSE
         </button>
       </div>
     </div>

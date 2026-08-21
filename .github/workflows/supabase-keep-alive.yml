@@ -2,9 +2,9 @@ name: Supabase Keep Alive
 
 on:
   schedule:
-    # Chạy tự động lúc 00:00 UTC mỗi 2 ngày (ngăn Supabase pause sau 7 ngày không hoạt động)
+    # Run at 00:00 UTC every 2 days (prevents Supabase inactivity pause)
     - cron: '0 0 */2 * *'
-  workflow_dispatch: # Cho phép bấm nút "Run workflow" thủ công trên GitHub Actions
+  workflow_dispatch: # Allows manual trigger from GitHub Actions tab
 
 jobs:
   ping-supabase:
@@ -21,7 +21,7 @@ jobs:
             exit 1
           fi
 
-          # Xóa dấu gạch chéo cuối URL nếu có
+          # Strip trailing slash if present
           CLEAN_URL="${SUPABASE_URL%/}"
 
           echo "Pinging Supabase REST API at $CLEAN_URL..."
@@ -36,8 +36,8 @@ jobs:
           echo ""
 
           if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
-            echo "✅ Successfully pinged Supabase! Project status is active."
+            echo "Successfully pinged Supabase! Project is active."
           else
-            echo "❌ Failed to ping Supabase (HTTP $HTTP_STATUS)."
+            echo "Failed to ping Supabase (HTTP $HTTP_STATUS)."
             exit 1
           fi
