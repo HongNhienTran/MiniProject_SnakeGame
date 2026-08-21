@@ -313,15 +313,9 @@ export default function Home() {
           )}
         </div>
 
-        {/* KHU VỰC TRÊN: LOGO GAME */}
+        {/* TOP: GAME LOGO */}
         <div className="flex flex-col items-center mt-16 w-full">
-          <div style={{ animation: 'jump-low 2s ease-in-out infinite' }}>
-            <style>{`
-              @keyframes jump-low {
-                0%, 100% { transform: translateY(0); }
-                50% { transform: translateY(-10px); }
-              }
-            `}</style>
+          <div className="animate-jump-low">
             <Image src="https://res.cloudinary.com/det724qml/image/upload/v1779598010/SnakeGame_logo_tbbt6c.png" alt="Snake Game Logo" width={680} height={200} priority className="object-contain drop-shadow-sm" />
           </div>
         </div>
