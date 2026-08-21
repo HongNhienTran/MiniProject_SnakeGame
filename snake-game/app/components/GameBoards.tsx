@@ -2,17 +2,30 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/utils/supabase";
+import { soundManager } from "@/utils/audio";
+import { ThemeId, GAME_THEMES, GameTheme } from "@/utils/themes";
 
 type Position = { x: number; y: number };
 type Direction = "UP" | "DOWN" | "LEFT" | "RIGHT";
 type GameBoardProps = {
   userId?: string;
   onBackToMenu: () => void;
+  themeId?: ThemeId;
+  soundEnabled?: boolean;
+  volume?: number;
 };
 
 const GRID_SIZE = 20; // Lưới 20x20
 
-export default function GameBoard({ userId, onBackToMenu }: GameBoardProps) {
+export default function GameBoard({
+  userId,
+  onBackToMenu,
+  themeId = "classic",
+  soundEnabled = true,
+  volume = 0.5,
+}: GameBoardProps) {
+  const theme: GameTheme = GAME_THEMES[themeId] || GAME_THEMES.classic;
+
   const [snake, setSnake] = useState<Position[]>([{ x: 10, y: 10 }]);
   const [food, setFood] = useState<Position>({ x: 5, y: 5 });
   const [direction, setDirection] = useState<Direction>("RIGHT");
@@ -21,6 +34,12 @@ export default function GameBoard({ userId, onBackToMenu }: GameBoardProps) {
 
   const directionRef = useRef<Direction>(direction);
   directionRef.current = direction;
+
+  const soundEnabledRef = useRef<boolean>(soundEnabled);
+  soundEnabledRef.current = soundEnabled;
+
+  const volumeRef = useRef<number>(volume);
+  volumeRef.current = volume;
 
   const generateFood = useCallback((currentSnake: Position[]): Position => {
     while (true) {
@@ -36,6 +55,7 @@ export default function GameBoard({ userId, onBackToMenu }: GameBoardProps) {
   }, []);
 
   const resetGame = () => {
+    if (soundEnabledRef.current) soundManager.playClick(volumeRef.current);
     const initialSnake = [{ x: 10, y: 10 }];
     setSnake(initialSnake);
     setFood(generateFood(initialSnake));
@@ -54,6 +74,9 @@ export default function GameBoard({ userId, onBackToMenu }: GameBoardProps) {
     };
     if (opposites[newDir] !== directionRef.current) {
       setDirection(newDir);
+      if (soundEnabledRef.current) {
+        soundManager.playMove(volumeRef.current);
+      }
     }
   }, []);
 
@@ -109,6 +132,7 @@ export default function GameBoard({ userId, onBackToMenu }: GameBoardProps) {
           newHead.y >= GRID_SIZE
         ) {
           setIsGameOver(true);
+          if (soundEnabledRef.current) soundManager.playGameOver(volumeRef.current);
           return prevSnake;
         }
 
@@ -117,6 +141,7 @@ export default function GameBoard({ userId, onBackToMenu }: GameBoardProps) {
         );
         if (bit_itself) {
           setIsGameOver(true);
+          if (soundEnabledRef.current) soundManager.playGameOver(volumeRef.current);
           return prevSnake;
         }
 
@@ -124,7 +149,8 @@ export default function GameBoard({ userId, onBackToMenu }: GameBoardProps) {
 
         if (newHead.x === food.x && newHead.y === food.y) {
           setScore((prev) => prev + 1);
-          setFood(generateFood(newSnake)); 
+          if (soundEnabledRef.current) soundManager.playEat(volumeRef.current);
+          setFood(generateFood(newSnake));
         } else {
           newSnake.pop();
         }
@@ -153,21 +179,24 @@ export default function GameBoard({ userId, onBackToMenu }: GameBoardProps) {
     <div className="flex flex-col items-center justify-center max-w-sm w-full p-4 animate-fade-in font-mono">
       
       {/* THANH ĐIỂM SỐ & NÚT QUAY LẠI MENU */}
-      <div className="w-full flex justify-between items-center bg-white/80 px-4 py-3 rounded-2xl border-2 border-slate-800 shadow-xs mb-4">
-        <span className="text-slate-800 font-bold tracking-wider text-sm">
-          SCORE: <span className="text-lime-700 font-black text-base">{score}</span>
+      <div className={`w-full flex justify-between items-center px-4 py-3 rounded-2xl border-2 shadow-xs mb-4 ${theme.cardBg} ${theme.borderColor}`}>
+        <span className={`font-bold tracking-wider text-sm ${theme.textColor}`}>
+          SCORE: <span className={`font-black text-base ${theme.accentText}`}>{score}</span>
         </span>
         <button 
-          onClick={onBackToMenu}
-          className="text-xs font-bold bg-slate-800 text-white px-3 py-1.5 rounded-xl hover:bg-slate-700 transition active:scale-95"
+          onClick={() => {
+            if (soundEnabledRef.current) soundManager.playClick(volumeRef.current);
+            onBackToMenu();
+          }}
+          className={`text-xs font-bold px-3 py-1.5 rounded-xl transition active:scale-95 shadow-xs ${theme.secondaryBtn}`}
         >
           MENU
         </button>
       </div>
 
-      {/* KHUNG LƯỚI CHƠI GAME (GIỮ NGUYÊN KÍCH THƯỚC VÀ HIỂN THỊ CỦA BẠN) */}
+      {/* KHUNG LƯỚI CHƠI GAME */}
       <div
-        className="grid bg-gray-800 border-4 border-slate-800 relative rounded-2xl overflow-hidden shadow-md"
+        className={`grid border-4 relative rounded-2xl overflow-hidden shadow-md transition-all ${theme.boardBg} ${theme.boardBorder}`}
         style={{
           gridTemplateColumns: `repeat(${GRID_SIZE}, minmax(0, 1fr))`,
           width: "100%",
@@ -185,31 +214,40 @@ export default function GameBoard({ userId, onBackToMenu }: GameBoardProps) {
           return (
             <div
               key={index}
-              className={`w-full h-full border-[0.5px] border-gray-900/10 ${
+              className={`w-full h-full border-[0.5px] transition-all duration-75 ${theme.gridLine} ${
                 isSnakeHead
-                  ? "bg-emerald-400 rounded-xs"
+                  ? `${theme.snakeHead} rounded-xs`
                   : isSnake
-                    ? "bg-emerald-600"
+                    ? `${theme.snakeBody}`
                     : isFood
-                      ? "bg-red-500 animate-pulse rounded-full"
+                      ? `${theme.food} animate-pulse rounded-full`
                       : "bg-transparent"
               }`}
             />
           );
         })}
 
-        {/* BẢNG THÔNG BÁO THUA cuộc */}
+        {/* BẢNG THÔNG BÁO THUA CUỘC */}
         {isGameOver && (
-          <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center text-center p-4 z-10 animate-fade-in">
-            <h2 className="text-2xl font-black text-red-500 mb-2 tracking-widest">
+          <div className="absolute inset-0 bg-black/85 flex flex-col items-center justify-center text-center p-4 z-10 animate-fade-in">
+            <h2 className="text-2xl font-black text-red-500 mb-2 tracking-widest animate-bounce">
               GAME OVER
             </h2>
-            <p className="text-gray-300 text-sm mb-6 font-bold">Bạn đạt được {score} điểm.</p>
+            <p className="text-gray-200 text-sm mb-6 font-bold">Bạn đạt được {score} điểm.</p>
             <div className="flex gap-3">
-              <button onClick={resetGame} className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 font-bold rounded-xl text-xs transition active:scale-95 text-white">
+              <button 
+                onClick={resetGame} 
+                className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 font-bold rounded-xl text-xs transition active:scale-95 text-white shadow-md"
+              >
                 Chơi Lại
               </button>
-              <button onClick={onBackToMenu} className="px-4 py-2 bg-gray-600 hover:bg-gray-700 font-bold rounded-xl text-xs transition active:scale-95 text-white">
+              <button 
+                onClick={() => {
+                  if (soundEnabledRef.current) soundManager.playClick(volumeRef.current);
+                  onBackToMenu();
+                }} 
+                className="px-4 py-2 bg-gray-600 hover:bg-gray-700 font-bold rounded-xl text-xs transition active:scale-95 text-white shadow-md"
+              >
                 Menu Chính
               </button>
             </div>
@@ -223,7 +261,7 @@ export default function GameBoard({ userId, onBackToMenu }: GameBoardProps) {
         <button 
           type="button"
           onClick={() => changeDirection("UP")}
-          className={`w-12 h-12 bg-white text-slate-800 rounded-xl border-2 border-slate-800 flex items-center justify-center shadow-sm transition active:scale-90 ${direction === "UP" ? "bg-amber-100" : ""}`}
+          className={`w-12 h-12 rounded-xl border-2 flex items-center justify-center shadow-sm transition active:scale-90 ${theme.secondaryBtn} ${direction === "UP" ? "ring-2 ring-emerald-500" : ""}`}
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
@@ -236,7 +274,7 @@ export default function GameBoard({ userId, onBackToMenu }: GameBoardProps) {
           <button 
             type="button"
             onClick={() => changeDirection("LEFT")}
-            className={`w-12 h-12 bg-white text-slate-800 rounded-xl border-2 border-slate-800 flex items-center justify-center shadow-sm transition active:scale-90 ${direction === "LEFT" ? "bg-amber-100" : ""}`}
+            className={`w-12 h-12 rounded-xl border-2 flex items-center justify-center shadow-sm transition active:scale-90 ${theme.secondaryBtn} ${direction === "LEFT" ? "ring-2 ring-emerald-500" : ""}`}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
@@ -247,7 +285,7 @@ export default function GameBoard({ userId, onBackToMenu }: GameBoardProps) {
           <button 
             type="button"
             onClick={() => changeDirection("DOWN")}
-            className={`w-12 h-12 bg-white text-slate-800 rounded-xl border-2 border-slate-800 flex items-center justify-center shadow-sm transition active:scale-90 ${direction === "DOWN" ? "bg-amber-100" : ""}`}
+            className={`w-12 h-12 rounded-xl border-2 flex items-center justify-center shadow-sm transition active:scale-90 ${theme.secondaryBtn} ${direction === "DOWN" ? "ring-2 ring-emerald-500" : ""}`}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
@@ -258,7 +296,7 @@ export default function GameBoard({ userId, onBackToMenu }: GameBoardProps) {
           <button 
             type="button"
             onClick={() => changeDirection("RIGHT")}
-            className={`w-12 h-12 bg-white text-slate-800 rounded-xl border-2 border-slate-800 flex items-center justify-center shadow-sm transition active:scale-90 ${direction === "RIGHT" ? "bg-amber-100" : ""}`}
+            className={`w-12 h-12 rounded-xl border-2 flex items-center justify-center shadow-sm transition active:scale-90 ${theme.secondaryBtn} ${direction === "RIGHT" ? "ring-2 ring-emerald-500" : ""}`}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
