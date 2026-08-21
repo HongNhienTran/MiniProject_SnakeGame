@@ -9,16 +9,18 @@ type Position = { x: number; y: number };
 type Direction = "UP" | "DOWN" | "LEFT" | "RIGHT";
 type GameBoardProps = {
   userId?: string;
+  avatarUrl?: string;
   onBackToMenu: () => void;
   themeId?: ThemeId;
   soundEnabled?: boolean;
   volume?: number;
 };
 
-const GRID_SIZE = 20; // Lưới 20x20
+const GRID_SIZE = 20; // 20x20 grid
 
 export default function GameBoard({
   userId,
+  avatarUrl,
   onBackToMenu,
   themeId = "classic",
   soundEnabled = true,
@@ -169,7 +171,7 @@ export default function GameBoard({
           .from("scores")
           .insert([{ user_id: userId, score: score }]);
 
-        if (error) console.error("Lỗi lưu điểm lên Cloud:", error.message);
+        if (error) console.error("Error saving score to Cloud:", error.message);
       }
     };
     saveScore();
@@ -214,41 +216,51 @@ export default function GameBoard({
           return (
             <div
               key={index}
-              className={`w-full h-full border-[0.5px] transition-all duration-75 ${theme.gridLine} ${
+              className={`w-full h-full border-[0.5px] relative flex items-center justify-center transition-all duration-75 ${theme.gridLine} ${
                 isSnakeHead
-                  ? `${theme.snakeHead} rounded-xs`
+                  ? avatarUrl
+                    ? "rounded-md overflow-hidden z-10 scale-110 shadow-sm border border-white/40"
+                    : `${theme.snakeHead} rounded-sm z-10 shadow-xs`
                   : isSnake
-                    ? `${theme.snakeBody}`
+                    ? `${theme.snakeBody} rounded-xs`
                     : isFood
                       ? `${theme.food} animate-pulse rounded-full`
                       : "bg-transparent"
               }`}
-            />
+            >
+              {isSnakeHead && avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt="Snake Head"
+                  className="w-full h-full object-cover"
+                />
+              ) : null}
+            </div>
           );
         })}
 
         {/* BẢNG THÔNG BÁO THUA CUỘC */}
         {isGameOver && (
           <div className="absolute inset-0 bg-black/85 flex flex-col items-center justify-center text-center p-4 z-10 animate-fade-in">
-            <h2 className="text-2xl font-black text-red-500 mb-2 tracking-widest animate-bounce">
+            <h2 className="text-2xl font-black text-red-500 mb-2 tracking-widest">
               GAME OVER
             </h2>
-            <p className="text-gray-200 text-sm mb-6 font-bold">Bạn đạt được {score} điểm.</p>
+            <p className="text-gray-200 text-sm mb-6 font-bold">You scored {score} points.</p>
             <div className="flex gap-3">
               <button 
                 onClick={resetGame} 
-                className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 font-bold rounded-xl text-xs transition active:scale-95 text-white shadow-md"
+                className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 font-bold rounded-xl text-xs transition active:scale-95 text-white shadow-md uppercase"
               >
-                Chơi Lại
+                Play Again
               </button>
               <button 
                 onClick={() => {
                   if (soundEnabledRef.current) soundManager.playClick(volumeRef.current);
                   onBackToMenu();
                 }} 
-                className="px-4 py-2 bg-gray-600 hover:bg-gray-700 font-bold rounded-xl text-xs transition active:scale-95 text-white shadow-md"
+                className="px-4 py-2 bg-gray-600 hover:bg-gray-700 font-bold rounded-xl text-xs transition active:scale-95 text-white shadow-md uppercase"
               >
-                Menu Chính
+                Main Menu
               </button>
             </div>
           </div>

@@ -3,7 +3,6 @@ export type ThemeId = "classic" | "cyberpunk" | "gameboy" | "matcha" | "sunset";
 export interface GameTheme {
   id: ThemeId;
   name: string;
-  emoji: string;
   bgHex: string;
   cardBg: string;
   modalBgHex: string;
@@ -34,8 +33,7 @@ export interface GameTheme {
 export const GAME_THEMES: Record<ThemeId, GameTheme> = {
   classic: {
     id: "classic",
-    name: "Classic Retro",
-    emoji: "🍦",
+    name: "Classic",
     bgHex: "#f6edcc",
     cardBg: "bg-white/80",
     modalBgHex: "#f6edcc",
@@ -49,9 +47,9 @@ export const GAME_THEMES: Record<ThemeId, GameTheme> = {
     boardBg: "bg-gray-800",
     boardBorder: "border-slate-800",
     gridLine: "border-gray-900/15",
-    snakeHead: "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]",
+    snakeHead: "bg-emerald-400",
     snakeBody: "bg-emerald-600",
-    food: "bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.8)]",
+    food: "bg-red-500",
     swatch: {
       bg: "#f6edcc",
       snake: "#10b981",
@@ -60,8 +58,7 @@ export const GAME_THEMES: Record<ThemeId, GameTheme> = {
   },
   cyberpunk: {
     id: "cyberpunk",
-    name: "Cyberpunk Dark",
-    emoji: "🌌",
+    name: "Cyberpunk",
     bgHex: "#0d1117",
     cardBg: "bg-slate-900/90",
     modalBgHex: "#161b22",
@@ -70,14 +67,14 @@ export const GAME_THEMES: Record<ThemeId, GameTheme> = {
     borderColor: "border-cyan-500/70",
     borderHex: "#06b6d4",
     accentText: "text-cyan-400",
-    primaryBtn: "bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-black border-2 border-cyan-400 shadow-[0_0_12px_rgba(6,182,212,0.4)]",
+    primaryBtn: "bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-black border-2 border-cyan-400",
     secondaryBtn: "bg-slate-800 hover:bg-slate-700 text-cyan-200 border-2 border-cyan-500/60",
     boardBg: "bg-slate-950",
-    boardBorder: "border-cyan-500 shadow-[0_0_15px_rgba(6,182,212,0.3)]",
+    boardBorder: "border-cyan-500",
     gridLine: "border-cyan-900/20",
-    snakeHead: "bg-cyan-300 shadow-[0_0_10px_rgba(103,232,249,0.9)]",
+    snakeHead: "bg-cyan-300",
     snakeBody: "bg-cyan-500",
-    food: "bg-fuchsia-500 shadow-[0_0_12px_rgba(217,70,239,0.9)]",
+    food: "bg-fuchsia-500",
     swatch: {
       bg: "#0d1117",
       snake: "#06b6d4",
@@ -86,8 +83,7 @@ export const GAME_THEMES: Record<ThemeId, GameTheme> = {
   },
   gameboy: {
     id: "gameboy",
-    name: "GameBoy 8-Bit",
-    emoji: "👾",
+    name: "GameBoy",
     bgHex: "#8b956d",
     cardBg: "bg-[#9bbc0f]/90",
     modalBgHex: "#9bbc0f",
@@ -101,7 +97,7 @@ export const GAME_THEMES: Record<ThemeId, GameTheme> = {
     boardBg: "bg-[#0f380f]",
     boardBorder: "border-[#0f380f]",
     gridLine: "border-[#306230]/30",
-    snakeHead: "bg-[#cadc9f] shadow-inner",
+    snakeHead: "bg-[#cadc9f]",
     snakeBody: "bg-[#8bac0f]",
     food: "bg-[#9bbc0f] border-2 border-[#cadc9f]",
     swatch: {
@@ -112,8 +108,7 @@ export const GAME_THEMES: Record<ThemeId, GameTheme> = {
   },
   matcha: {
     id: "matcha",
-    name: "Matcha Garden",
-    emoji: "🍵",
+    name: "Matcha",
     bgHex: "#e2ece9",
     cardBg: "bg-white/85",
     modalBgHex: "#e2ece9",
@@ -127,9 +122,9 @@ export const GAME_THEMES: Record<ThemeId, GameTheme> = {
     boardBg: "bg-[#1b4332]",
     boardBorder: "border-[#2d6a4f]",
     gridLine: "border-emerald-800/20",
-    snakeHead: "bg-[#95d5b2] shadow-sm",
+    snakeHead: "bg-[#95d5b2]",
     snakeBody: "bg-[#52b788]",
-    food: "bg-[#ff758f] shadow-[0_0_8px_rgba(255,117,143,0.7)]",
+    food: "bg-[#ff758f]",
     swatch: {
       bg: "#e2ece9",
       snake: "#52b788",
@@ -138,8 +133,7 @@ export const GAME_THEMES: Record<ThemeId, GameTheme> = {
   },
   sunset: {
     id: "sunset",
-    name: "Sunset Arcade",
-    emoji: "🌅",
+    name: "Sunset",
     bgHex: "#faedcd",
     cardBg: "bg-[#fff1e6]/95",
     modalBgHex: "#faedcd",
@@ -155,7 +149,7 @@ export const GAME_THEMES: Record<ThemeId, GameTheme> = {
     gridLine: "border-amber-900/20",
     snakeHead: "bg-[#f4a261]",
     snakeBody: "bg-[#e76f51]",
-    food: "bg-[#e63946] shadow-[0_0_10px_rgba(230,57,70,0.8)]",
+    food: "bg-[#e63946]",
     swatch: {
       bg: "#faedcd",
       snake: "#e76f51",

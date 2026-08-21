@@ -21,7 +21,7 @@ export async function GET() {
   try {
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-    // Thực hiện truy vấn 1 bản ghi từ bảng scores để kích hoạt hoạt động trên Supabase DB
+    // Query 1 record from scores table to trigger Supabase DB activity
     const { data, error } = await supabase
       .from("scores")
       .select("id")
