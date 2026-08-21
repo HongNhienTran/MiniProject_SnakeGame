@@ -34,11 +34,11 @@ export default function SplashScreen({ onFinished }: SplashScreenProps) {
             style={{ backgroundColor: "#f6edcc" }} // Mã màu nền bạn yêu cầu
         >
             <style>{`
-    @keyframes jump-low {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-15px); } /* Độ cao nhảy thấp vừa phải, cực mượt */
-    }
-  `}</style>
+            @keyframes jump-low {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); } 
+            }
+            `}</style>
             {/* Khu vực Logo */}
             <div className="mb-8" style={{ animation: 'jump-low 1s ease-in-out infinite' }}>
                 <Image
